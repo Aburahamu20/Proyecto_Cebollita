@@ -100,37 +100,81 @@ La fotoresistencia LDR mide la cantidad de luz ambiental.
 
 Una vez completadas las lecturas y acciones, el sistema espera 5 segundos antes de comenzar nuevamente el ciclo.
 
-### 2.5 Secuencia lógica
+### 2.5 Diagrama de flujo del sistema
 
-```text
-┌─────────────────────────────────────────┐
-│        Inicio del ciclo de control      │
-└──────────────────┬──────────────────────┘
-                   │
-                   ▼
-┌─────────────────────────────────────────┐
-│  Lectura y control de la temperatura    │
-│  Ventilador / Calefactor                │
-└──────────────────┬──────────────────────┘
-                   │
-                   ▼
-┌─────────────────────────────────────────┐
-│  Lectura de la humedad del suelo        │
-│  Bomba de riego / Ventilación           │
-└──────────────────┬──────────────────────┘
-                   │
-                   ▼
-┌─────────────────────────────────────────┐
-│  Lectura del nivel de iluminación       │
-│  Encendido o apagado de los LED         │
-└──────────────────┬──────────────────────┘
-                   │
-                   ▼
-┌─────────────────────────────────────────┐
-│         Espera de 5 segundos            │
-└──────────────────┬──────────────────────┘
-                   │
-                   └──────────► Reiniciar ciclo
+> El siguiente diagrama representa el ciclo completo de lectura y control del invernadero. Fue recreado mediante Mermaid, por lo que no corresponde a una imagen y puede modificarse directamente desde el código del repositorio.
+
+```mermaid
+flowchart TD
+    A["Leer temperatura"] --> B{"¿Temperatura mayor a 25 °C?"}
+
+    B -- Sí --> C["Encender ventilador"]
+    B -- No --> D{"¿Temperatura menor a 13 °C?"}
+
+    D -- Sí --> E["Encender luz térmica o calefactor"]
+    D -- No --> F["Apagar ventilador y calefactor"]
+
+    C --> G["Leer humedad del suelo"]
+    E --> G
+    F --> G
+
+    G --> H{"¿Humedad menor al 40 %?"}
+
+    H -- Sí --> I["Encender bomba de agua o sistema de riego"]
+    H -- No --> J{"¿Humedad mayor al 70 %?"}
+
+    J -- Sí --> K["Apagar riego y encender ventilador"]
+    J -- No --> L["Apagar riego"]
+
+    I --> M["Control de iluminación"]
+    K --> M
+    L --> M
+
+    M --> N{"¿El nivel de luz es bajo?"}
+
+    N -- Sí --> O["Encender LED"]
+    N -- No --> P["Apagar LED"]
+
+    O --> Q["Esperar 5 segundos"]
+    P --> Q
+
+    Q --> A
+
+    classDef lectura fill:#e8f1fb,stroke:#1f4e79,stroke-width:2px,color:#111;
+    classDef decision fill:#fff4cc,stroke:#b8860b,stroke-width:2px,color:#111;
+    classDef encender fill:#e5f5e8,stroke:#198754,stroke-width:2px,color:#111;
+    classDef apagar fill:#fde8e8,stroke:#dc3545,stroke-width:2px,color:#111;
+    classDef tiempo fill:#eeeeee,stroke:#555555,stroke-width:2px,color:#111;
+
+    class A,G,M lectura;
+    class B,D,H,J,N decision;
+    class C,E,I,K,O encender;
+    class F,L,P apagar;
+    class Q tiempo;
+```
+
+### 2.6 Explicación del recorrido
+
+El ciclo comienza leyendo la temperatura ambiental:
+
+1. Si la temperatura es superior a 25 °C, se enciende el ventilador.
+2. Si no supera los 25 °C, se comprueba si es inferior a 13 °C.
+3. Si es inferior a 13 °C, se enciende el calefactor.
+4. Si se encuentra entre ambos límites, se apagan el ventilador y el calefactor.
+
+Luego se lee la humedad del suelo:
+
+1. Si la humedad es inferior al 40 %, se enciende la bomba de riego.
+2. Si no es inferior al 40 %, se comprueba si supera el 70 %.
+3. Si supera el 70 %, se apaga el riego y se enciende el ventilador.
+4. Si se encuentra entre 40 % y 70 %, se mantiene apagado el riego.
+
+Finalmente, se controla la iluminación:
+
+1. Si el nivel de luz es bajo, se encienden los LED.
+2. Si existe suficiente iluminación, se apagan los LED.
+3. El sistema espera 5 segundos.
+4. Después de la espera, comienza nuevamente la lectura de temperatura.
 ```
 
 > La imagen original del diagrama de flujo fue omitida. Esta representación textual conserva la lógica de funcionamiento sin utilizar la imagen del documento.
