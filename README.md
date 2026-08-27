@@ -100,40 +100,83 @@ La fotoresistencia LDR mide la cantidad de luz ambiental.
 
 Una vez completadas las lecturas y acciones, el sistema espera 5 segundos antes de comenzar nuevamente el ciclo.
 
-### 2.5 Secuencia lógica
+### 2.5 Diagrama de flujo del sistema
+
+> El siguiente diagrama representa el ciclo completo de lectura y control del invernadero. Fue recreado mediante caracteres de texto, por lo que no corresponde a una imagen y puede editarse directamente desde el repositorio.
 
 ```text
-┌─────────────────────────────────────────┐
-│        Inicio del ciclo de control      │
-└──────────────────┬──────────────────────┘
-                   │
-                   ▼
-┌─────────────────────────────────────────┐
-│  Lectura y control de la temperatura    │
-│  Ventilador / Calefactor                │
-└──────────────────┬──────────────────────┘
-                   │
-                   ▼
-┌─────────────────────────────────────────┐
-│  Lectura de la humedad del suelo        │
-│  Bomba de riego / Ventilación           │
-└──────────────────┬──────────────────────┘
-                   │
-                   ▼
-┌─────────────────────────────────────────┐
-│  Lectura del nivel de iluminación       │
-│  Encendido o apagado de los LED         │
-└──────────────────┬──────────────────────┘
-                   │
-                   ▼
-┌─────────────────────────────────────────┐
-│         Espera de 5 segundos            │
-└──────────────────┬──────────────────────┘
-                   │
-                   └──────────► Reiniciar ciclo
+┌──────────────────────────────────────────┐
+│            LEER TEMPERATURA              │
+└────────────────────┬─────────────────────┘
+                     │
+                     ▼
+┌──────────────────────────────────────────┐
+│      ¿TEMPERATURA MAYOR A 25 °C?         │
+└──────────┬───────────────────┬───────────┘
+           │ SÍ                │ NO
+           ▼                   ▼
+┌────────────────────┐   ┌──────────────────────────────────────┐
+│ Encender ventilador│   │   ¿TEMPERATURA MENOR A 13 °C?       │
+└──────────┬─────────┘   └──────────┬───────────────┬───────────┘
+           │                        │ SÍ            │ NO
+           │                        ▼               ▼
+           │             ┌───────────────────┐ ┌───────────────────────┐
+           │             │ Encender luz      │ │ Apagar ventilador y   │
+           │             │ térmica/calefactor│ │ calefactor            │
+           │             └─────────┬─────────┘ └──────────┬────────────┘
+           │                       │                      │
+           └───────────────────────┴──────────────────────┘
+                                   │
+                                   ▼
+                    ┌────────────────────────────┐
+                    │ LEER HUMEDAD DEL SUELO     │
+                    └──────────────┬─────────────┘
+                                   │
+                                   ▼
+                    ┌────────────────────────────┐
+                    │ ¿HUMEDAD MENOR AL 40 %?    │
+                    └────────┬───────────┬───────┘
+                             │ SÍ        │ NO
+                             ▼           ▼
+              ┌─────────────────────┐  ┌───────────────────────────┐
+              │ Encender bomba de   │  │ ¿HUMEDAD MAYOR AL 70 %?  │
+              │ agua/sistema de     │  └────────┬──────────┬───────┘
+              │ riego               │           │ SÍ       │ NO
+              └──────────┬──────────┘           ▼          ▼
+                         │         ┌────────────────────┐ ┌──────────────┐
+                         │         │ Apagar riego y     │ │ Apagar riego│
+                         │         │ encender ventilador│ └──────┬───────┘
+                         │         └──────────┬─────────┘        │
+                         └────────────────────┴──────────────────┘
+                                              │
+                                              ▼
+                              ┌──────────────────────────┐
+                              │     CONTROL DE LUZ       │
+                              └────────────┬─────────────┘
+                                           │
+                                           ▼
+                              ┌──────────────────────────┐
+                              │ ¿EL NIVEL DE LUZ ES BAJO?│
+                              └────────┬──────────┬───────┘
+                                       │ SÍ       │ NO
+                                       ▼          ▼
+                            ┌────────────────┐ ┌────────────────┐
+                            │ Encender LEDS  │ │ Apagar LEDS    │
+                            └───────┬────────┘ └───────┬────────┘
+                                    │                  │
+                                    └────────┬─────────┘
+                                             │
+                                             ▼
+                              ┌──────────────────────────┐
+                              │   ESPERAR 5 SEGUNDOS     │
+                              └────────────┬─────────────┘
+                                           │
+                                           └──────────────► VOLVER A
+                                                            LEER
+                                                        TEMPERATURA
 ```
 
-> La imagen original del diagrama de flujo fue omitida. Esta representación textual conserva la lógica de funcionamiento sin utilizar la imagen del documento.
+El sistema repite automáticamente este proceso cada 5 segundos, comenzando nuevamente con la lectura de la temperatura ambiental.
 
 ---
 
@@ -269,7 +312,7 @@ void loop() {
 
 | Variable | Tipo | Función |
 |:---|:---:|:---|
-| `lectTemp` | `int` | Almacena la lectura analógica del TMP36 |
+| `lectTemp` | `int` | Almacena la lectura analógica del sensor TMP36 |
 | `tempC` | `float` | Guarda la temperatura convertida a grados Celsius |
 | `lecturaHumedad` | `int` | Almacena la lectura del sensor de humedad |
 | `humedadPct` | `int` | Guarda la humedad convertida a porcentaje |
@@ -288,7 +331,7 @@ void loop() {
 | Temperatura baja | Temp = 10 °C, Hum = 50 %, Luz = 600 | Calefactor ON, ventilador OFF, riego OFF y LED OFF | ✅ PASÓ |
 | Humedad baja | Temp = 20 °C, Hum = 30 %, Luz = 600 | Bomba de riego ON, ventilador OFF y calefactor OFF | ✅ PASÓ |
 | Humedad alta | Temp = 20 °C, Hum = 85 %, Luz = 600 | Bomba de riego OFF y ventilador ON | ✅ PASÓ |
-| Oscuridad | Temp = 20 °C, Hum = 50 %, Luz = 200 | LED ON y demás actuadores OFF | ✅ PASÓ |
+| Oscuridad | Temp = 20 °C, Hum = 50 %, Luz = 200 | LED ON y los demás actuadores OFF | ✅ PASÓ |
 | Estado normal | Temp = 20 °C, Hum = 55 %, Luz = 700 | Todos los actuadores OFF | ✅ PASÓ |
 
 ### 5.1 Resumen de resultados
@@ -326,7 +369,7 @@ La integración simultánea de ventilación, calefacción, iluminación y riego 
 
 ### 6.3 Proyección IoT futura
 
-Como siguiente fase del proyecto, se propone incorporar un módulo de comunicación inalámbrica, como un `ESP8266` o `ESP32`.
+Como siguiente fase del proyecto, se propone incorporar un módulo de comunicación inalámbrica como un `ESP8266` o `ESP32`.
 
 Este módulo permitiría:
 
