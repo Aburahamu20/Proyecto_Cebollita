@@ -1,101 +1,183 @@
-# Informe Técnico Final de Proyecto IoT
+<div align="center">
+
+# Informe EP1 — Proyecto IoT
 
 ## Sistema Automatizado de Control Ambiental, Humedad y Riego para Invernaderos
 
-**Instituto Profesional Duoc UC**  
-Escuela de Informática y Telecomunicaciones  
-Sede Plaza Vespucio
-
-### Integrantes del equipo
-
-1. Abraham Castro Romero
-2. Sebastian Fuentes Cortes
-3. Lisandra Gonzalez Hernandez
-4. Felipe Murua Lobos
-5. Barbara Saavedra Fernandez
-
-### Información académica
-
-- **Asignatura:** SIY6122 - Problemáticas Globales
-- **Docente:** Marco Antonio Perelli
-- **Plataforma:** Arduino Uno + Tinkercad
-- **Asistente IA:** Gemini AI
-- **Lugar y año:** Santiago, Chile — 2026
+![Badge](https://img.shields.io/badge/Asignatura-SIY6122-0078D4?style=for-the-badge)
+![Badge](https://img.shields.io/badge/Evaluación-EP1-28a745?style=for-the-badge)
+![Badge](https://img.shields.io/badge/Sección-002V-e63946?style=for-the-badge)
+![Badge](https://img.shields.io/badge/DUOC%20UC-Agosto%202026-1F4E79?style=for-the-badge)
 
 ---
 
-## 1. Introducción y objetivos del proyecto
+| Campo | Detalle |
+|:---|:---|
+| **Institución** | Instituto Profesional Duoc UC |
+| **Escuela** | Informática y Telecomunicaciones |
+| **Sede** | Plaza Norte |
+| **Asignatura** | SIY6122 - Problemáticas Globales y Prototipado |
+| **Evaluación** | Experiencia Práctica 1 (EP1) |
+| **Sección** | 002V |
+| **Proyecto** | Sistema Automatizado de Control Ambiental, Humedad y Riego para Invernaderos |
+| **Integrantes** | Abraham Castro Romero · Sebastian Fuentes Cortes · Lisandra Gonzalez Hernandez · Felipe Murua Lobos · Barbara Saavedra Fernandez |
+| **Docente** | Marcos Antonio Perelli Henriquez |
+| **Plataforma** | Arduino Uno + Tinkercad |
+| **Asistentes IA** | Gemini AI · Claude · ChatGPT |
+| **Fecha** | Agosto 2026 |
+
+</div>
+
+---
+
+## 📋 Tabla de contenidos
+
+- [1. Introducción y objetivos](#1-introducción-y-objetivos)
+- [2. Funcionamiento del sistema](#2-funcionamiento-del-sistema)
+- [3. Arquitectura de hardware](#3-arquitectura-de-hardware)
+- [4. Código fuente Arduino](#4-código-fuente-arduino)
+- [5. Validación y pruebas](#5-validación-y-pruebas)
+- [6. Conclusiones y próximos pasos](#6-conclusiones-y-próximos-pasos)
+
+---
+
+## 1. Introducción y objetivos
+
+> El proyecto desarrolla un prototipo IoT basado en Arduino para automatizar el control ambiental de un invernadero.
 
 El presente proyecto aborda la automatización del microclima en un invernadero mediante el desarrollo de un prototipo IoT basado en la plataforma Arduino.
 
-El objetivo principal es mantener las condiciones ambientales óptimas de temperatura, humedad del suelo e iluminación para maximizar el rendimiento agrícola y reducir el desperdicio de agua y energía.
+El objetivo principal es mantener condiciones ambientales óptimas de temperatura, humedad del suelo e iluminación, con la finalidad de maximizar el rendimiento agrícola y reducir el desperdicio de agua y energía.
 
 ### 1.1 Objetivos específicos
 
-- Monitorear continuamente la temperatura ambiental, el nivel de humedad del suelo y la intensidad lumínica.
-- Implementar un control térmico activo mediante ventilación cuando la temperatura sea superior a 25 °C.
-- Activar la calefacción cuando la temperatura sea inferior a 13 °C.
-- Automatizar la bomba de agua para mantener el nivel de humedad entre 40 % y 70 %.
-- Prevenir tanto el estrés hídrico como la saturación del suelo.
-- Controlar el sistema de iluminación suplementaria LED según las condiciones de luz ambiental.
-- Garantizar la ejecución de un ciclo continuo de lectura y control cada 5 segundos.
+- ✔️ Monitorear continuamente la temperatura ambiental.
+- ✔️ Medir el nivel de humedad presente en el suelo.
+- ✔️ Detectar la intensidad de la iluminación ambiental.
+- ✔️ Activar la ventilación cuando la temperatura sea superior a 25 °C.
+- ✔️ Activar la calefacción cuando la temperatura sea inferior a 13 °C.
+- ✔️ Mantener la humedad del suelo entre 40 % y 70 %.
+- ✔️ Prevenir el estrés hídrico y la saturación del suelo.
+- ✔️ Controlar automáticamente la iluminación LED suplementaria.
+- ✔️ Ejecutar un ciclo continuo de lectura y control cada 5 segundos.
 
 ---
 
-## 2. Descripción y análisis del diagrama de flujo
+## 2. Funcionamiento del sistema
 
-La arquitectura lógica del sistema está modelada mediante un diagrama de flujo estructurado en tres bloques secuenciales de toma de decisiones y un temporizador global de control.
+La arquitectura lógica del sistema se encuentra organizada en tres etapas secuenciales de toma de decisiones y un temporizador general.
 
-### 2.1 Etapa de temperatura
+### 2.1 Control de temperatura
 
-1. Se realiza la lectura del sensor de temperatura.
-2. Si la temperatura es superior a 25 °C, se enciende el ventilador.
-3. Si la temperatura es inferior a 13 °C, se enciende la luz térmica o calefactor.
-4. Si la temperatura se encuentra entre 13 °C y 25 °C, se apagan el ventilador y el calefactor.
+El sensor TMP36 mide continuamente la temperatura ambiental.
 
-### 2.2 Etapa de humedad del suelo
+| Condición | Acción |
+|:---|:---|
+| Temperatura superior a 25 °C | Encender ventilador y apagar calefactor |
+| Temperatura inferior a 13 °C | Encender calefactor y apagar ventilador |
+| Temperatura entre 13 °C y 25 °C | Apagar ventilador y calefactor |
 
-1. Se realiza la lectura del sensor de humedad del suelo.
-2. Si la humedad es inferior al 40 %, se enciende la bomba de agua o sistema de riego.
-3. Si la humedad es superior al 70 %, se apaga el riego y se enciende el ventilador para evacuar la humedad.
-4. Si la humedad se encuentra entre 40 % y 70 %, se mantiene apagado el sistema de riego.
+### 2.2 Control de humedad del suelo
 
-### 2.3 Etapa de iluminación
+El sensor de humedad determina el porcentaje de agua presente en el suelo.
 
-1. Se realiza la lectura de la fotocelda o sensor de luz.
-2. Si el nivel de luz ambiental es bajo, se encienden los LED suplementarios.
-3. Si existe suficiente iluminación, se apagan los LED.
+| Condición | Acción |
+|:---|:---|
+| Humedad inferior al 40 % | Encender bomba de riego |
+| Humedad superior al 70 % | Apagar riego y encender ventilador |
+| Humedad entre 40 % y 70 % | Mantener apagada la bomba de riego |
+
+### 2.3 Control de iluminación
+
+La fotoresistencia LDR mide la cantidad de luz ambiental.
+
+| Condición | Acción |
+|:---|:---|
+| Nivel de luz inferior a 400 | Encender iluminación LED |
+| Nivel de luz igual o superior a 400 | Apagar iluminación LED |
 
 ### 2.4 Temporización
 
-El sistema espera 5 segundos antes de regresar al inicio del ciclo de lectura y control.
+Una vez completadas las lecturas y acciones, el sistema espera 5 segundos antes de comenzar nuevamente el ciclo.
 
-> La imagen correspondiente al diagrama de flujo fue omitida de este repositorio.
+### 2.5 Secuencia lógica
+
+```text
+┌─────────────────────────────────────────┐
+│        Inicio del ciclo de control      │
+└──────────────────┬──────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────┐
+│  Lectura y control de la temperatura    │
+│  Ventilador / Calefactor                │
+└──────────────────┬──────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────┐
+│  Lectura de la humedad del suelo        │
+│  Bomba de riego / Ventilación           │
+└──────────────────┬──────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────┐
+│  Lectura del nivel de iluminación       │
+│  Encendido o apagado de los LED         │
+└──────────────────┬──────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────┐
+│         Espera de 5 segundos            │
+└──────────────────┬──────────────────────┘
+                   │
+                   └──────────► Reiniciar ciclo
+```
+
+> La imagen original del diagrama de flujo fue omitida. Esta representación textual conserva la lógica de funcionamiento sin utilizar la imagen del documento.
 
 ---
 
-## 3. Arquitectura de hardware y mapeo de pines
+## 3. Arquitectura de hardware
 
-| Componente o actuador | Conexión Arduino | Tipo de entrada/salida | Función en el sistema |
-|---|---|---|---|
-| Sensor de temperatura TMP36 | Pin analógico A0 | Entrada analógica | Medición de la temperatura ambiental en grados Celsius |
-| Sensor de humedad del suelo | Pin analógico A1 | Entrada analógica | Medición del porcentaje de humedad del suelo entre 0 % y 100 % |
-| Sensor de luz LDR | Pin analógico A2 | Entrada analógica | Detección del nivel de luminosidad ambiental |
-| Ventilador o motor DC | Pin digital 3 | Salida digital PWM | Refrigeración cuando T > 25 °C o disipación cuando H > 70 % |
-| Calefactor o luz térmica | Pin digital 4 | Salida digital | Calefacción del ambiente cuando T < 13 °C |
-| Bomba de agua o riego | Pin digital 5 | Salida digital | Suministro de agua cuando H < 40 % |
-| Iluminación LED | Pin digital 6 | Salida digital | Iluminación de apoyo cuando el nivel de luz es bajo |
+### 3.1 Componentes utilizados
+
+| Componente o actuador | Conexión Arduino | Tipo de entrada/salida | Función |
+|:---|:---:|:---:|:---|
+| Sensor de temperatura TMP36 | `A0` | Entrada analógica | Medición de la temperatura ambiental |
+| Sensor de humedad del suelo | `A1` | Entrada analógica | Medición del porcentaje de humedad |
+| Sensor de luz LDR | `A2` | Entrada analógica | Detección del nivel de iluminación |
+| Ventilador o motor DC | `3` | Salida digital PWM | Refrigeración y evacuación de humedad |
+| Calefactor o luz térmica | `4` | Salida digital | Calefacción del ambiente |
+| Bomba de agua | `5` | Salida digital | Activación del sistema de riego |
+| Iluminación LED | `6` | Salida digital | Iluminación ambiental suplementaria |
+
+### 3.2 Distribución de pines
+
+```text
+Arduino Uno
+│
+├── A0 ── Sensor de temperatura TMP36
+├── A1 ── Sensor de humedad del suelo
+├── A2 ── Fotoresistencia LDR
+├── D3 ── Ventilador
+├── D4 ── Calefactor
+├── D5 ── Bomba de riego
+└── D6 ── Iluminación LED
+```
 
 ---
 
-## 4. Código fuente C++ implementado para Arduino
+## 4. Código fuente Arduino
 
-El siguiente programa escrito en C++ traduce cada bloque de decisión y acción del diagrama de flujo para su simulación directa en Tinkercad:
+> El siguiente programa escrito en C++ implementa la lógica de control ambiental para su simulación en Tinkercad y ejecución en Arduino Uno.
 
 ```cpp
 /*
  * PROYECTO IoT: CONTROL DE INVERNADERO AUTOMATIZADO
- * Asignatura: SIY6122 - Problemáticas Globales | Duoc UC
+ * Asignatura: SIY6122 - Problemáticas Globales y Prototipado
+ * Evaluación: EP1
+ * Sección: 002V
+ * Duoc UC - Sede Plaza Norte
  */
 
 // Definición de pines de entrada (sensores)
@@ -143,7 +225,7 @@ void loop() {
   }
 
   // ---------------------------------------------------------
-  // 2. LECTURA Y CONTROL DE HUMEDAD DEL SUELO Y RIEGO
+  // 2. LECTURA Y CONTROL DE HUMEDAD DEL SUELO
   // ---------------------------------------------------------
 
   int lecturaHumedad = analogRead(PIN_HUMEDAD);
@@ -183,26 +265,56 @@ void loop() {
 }
 ```
 
+### 4.1 Resumen de variables
+
+| Variable | Tipo | Función |
+|:---|:---:|:---|
+| `lectTemp` | `int` | Almacena la lectura analógica del TMP36 |
+| `tempC` | `float` | Guarda la temperatura convertida a grados Celsius |
+| `lecturaHumedad` | `int` | Almacena la lectura del sensor de humedad |
+| `humedadPct` | `int` | Guarda la humedad convertida a porcentaje |
+| `nivelLuz` | `int` | Almacena la lectura de la fotoresistencia |
+| `umbralLuzBaja` | `int` | Define el nivel mínimo de iluminación aceptable |
+
 ---
 
-## 5. Matriz de validación y pruebas del sistema
+## 5. Validación y pruebas
 
-| Caso de prueba | Valores de entrada | Resultado esperado | Estado |
-|---|---|---|---|
-| Caso 1: Temperatura alta | Temp = 28 °C, Hum = 50 %, Luz = 600 | Ventilador ON, calefactor OFF, riego OFF y LED OFF | PASÓ |
-| Caso 2: Temperatura baja | Temp = 10 °C, Hum = 50 %, Luz = 600 | Calefactor ON, ventilador OFF, riego OFF y LED OFF | PASÓ |
-| Caso 3: Humedad baja | Temp = 20 °C, Hum = 30 %, Luz = 600 | Bomba de riego ON, ventilador OFF y calefactor OFF | PASÓ |
-| Caso 4: Humedad alta | Temp = 20 °C, Hum = 85 %, Luz = 600 | Bomba de riego OFF y ventilador ON para secado | PASÓ |
-| Caso 5: Oscuridad | Temp = 20 °C, Hum = 50 %, Luz = 200 | LED ON y los demás actuadores OFF | PASÓ |
-| Caso 6: Estado normal | Temp = 20 °C, Hum = 55 %, Luz = 700 | Todos los actuadores OFF | PASÓ |
+> Se realizaron seis casos de prueba para comprobar el funcionamiento de los sensores y actuadores.
+
+| Caso | Valores de entrada | Resultado esperado | Estado |
+|:---|:---|:---|:---:|
+| Temperatura alta | Temp = 28 °C, Hum = 50 %, Luz = 600 | Ventilador ON, calefactor OFF, riego OFF y LED OFF | ✅ PASÓ |
+| Temperatura baja | Temp = 10 °C, Hum = 50 %, Luz = 600 | Calefactor ON, ventilador OFF, riego OFF y LED OFF | ✅ PASÓ |
+| Humedad baja | Temp = 20 °C, Hum = 30 %, Luz = 600 | Bomba de riego ON, ventilador OFF y calefactor OFF | ✅ PASÓ |
+| Humedad alta | Temp = 20 °C, Hum = 85 %, Luz = 600 | Bomba de riego OFF y ventilador ON | ✅ PASÓ |
+| Oscuridad | Temp = 20 °C, Hum = 50 %, Luz = 200 | LED ON y demás actuadores OFF | ✅ PASÓ |
+| Estado normal | Temp = 20 °C, Hum = 55 %, Luz = 700 | Todos los actuadores OFF | ✅ PASÓ |
+
+### 5.1 Resumen de resultados
+
+```text
+Pruebas ejecutadas: 6
+Pruebas aprobadas:  6
+Pruebas fallidas:   0
+Resultado general:  SISTEMA VALIDADO
+```
 
 ---
 
 ## 6. Conclusiones y próximos pasos
 
-El prototipo desarrollado cumple íntegramente con la lógica de control especificada en el diagrama de flujo.
+La implementación del sistema automatizado de control ambiental para invernaderos fue completada exitosamente.
 
-La combinación del control de temperatura, humedad del suelo e iluminación permite mantener un microclima automatizado y óptimo.
+Se logró:
+
+- ✔️ Medir la temperatura ambiental mediante un sensor TMP36.
+- ✔️ Automatizar la ventilación cuando la temperatura supera los 25 °C.
+- ✔️ Automatizar la calefacción cuando la temperatura baja de 13 °C.
+- ✔️ Controlar el riego según el porcentaje de humedad del suelo.
+- ✔️ Activar la iluminación LED cuando existe poca luz ambiental.
+- ✔️ Ejecutar continuamente el sistema con intervalos de 5 segundos.
+- ✔️ Validar el funcionamiento mediante seis casos de prueba.
 
 ### 6.1 Eficiencia de control
 
@@ -210,10 +322,27 @@ El uso de una temporización de 5 segundos evita sobrecargas de procesamiento y 
 
 ### 6.2 Automatización integral
 
-La integración simultánea de ventilación, calefacción y riego automatizado reduce considerablemente la intervención humana.
+La integración simultánea de ventilación, calefacción, iluminación y riego automatizado reduce considerablemente la necesidad de intervención humana.
 
 ### 6.3 Proyección IoT futura
 
-Como siguiente fase, se propone añadir un módulo de comunicación inalámbrica ESP8266 o ESP32 para transmitir la telemetría a una base de datos en la nube.
+Como siguiente fase del proyecto, se propone incorporar un módulo de comunicación inalámbrica, como un `ESP8266` o `ESP32`.
 
-Esto permitiría visualizar las métricas del invernadero en tiempo real mediante un dashboard interactivo.
+Este módulo permitiría:
+
+- Enviar la telemetría del invernadero a una base de datos en la nube.
+- Consultar la temperatura y humedad de manera remota.
+- Visualizar métricas en tiempo real.
+- Crear un dashboard interactivo.
+- Generar alertas cuando se detecten condiciones críticas.
+- Mantener un historial de las mediciones ambientales.
+
+---
+
+<div align="center">
+
+**DUOC UC — Sede Plaza Norte**
+
+**Problemáticas Globales y Prototipado — EP1 — Agosto 2026**
+
+</div>
