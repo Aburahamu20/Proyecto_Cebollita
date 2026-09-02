@@ -54,7 +54,7 @@ En esta etapa:
 - Se analiza el requerimiento del cliente.
 - Se definen las entradas y salidas.
 - Se proponen los estados `NORMAL`, `ADVERTENCIA` y `CRÍTICO`.
-- Se establecen umbrales iniciales de temperatura e iluminación.
+- Se establecen umbrales iniciales de temperatura, iluminación y humedad del suelo.
 - Se define una interacción manual con el usuario.
 - Se establece una regla de prioridad.
 - Se elabora el diagrama y pseudocódigo previos.
@@ -69,7 +69,7 @@ Una persona debe supervisar constantemente las condiciones ambientales del inver
 
 El cliente necesita un primer prototipo de bajo costo que sea capaz de:
 
-1. Observar la temperatura y el nivel de iluminación.
+1. Observar la temperatura, el nivel de iluminación y, como función adicional, la humedad del suelo.
 2. Evaluar automáticamente las condiciones ambientales.
 3. Clasificar la situación en uno de tres estados.
 4. Informar claramente el estado al encargado.
@@ -82,7 +82,9 @@ Durante esta primera versión se trabajará con una sola planta y con las condic
 
 ## 3. Solución propuesta
 
-Se propone utilizar una placa `micro:bit` dentro de Tinkercad Circuits. El dispositivo medirá la temperatura y el nivel de iluminación, analizará ambas mediciones y mostrará en su matriz LED el estado general del invernadero.
+Se propone utilizar una placa `micro:bit` dentro de Tinkercad Circuits. El dispositivo medirá la temperatura, el nivel de iluminación y la humedad del suelo, analizará las tres mediciones y mostrará en su matriz LED el estado general del invernadero.
+
+La humedad se incorporará como una función adicional mediante una entrada analógica. Si Tinkercad no dispone del sensor específico, durante la simulación se podrá representar su lectura con un potenciómetro conectado al pin `P0`, utilizando una escala normalizada de 0 % a 100 %.
 
 La solución tendrá tres estados:
 
@@ -100,11 +102,12 @@ Los botones de la micro:bit permitirán consultar manualmente las mediciones sin
 |:---|:---|:---|
 | **Temperatura** | Sensor de temperatura disponible en la micro:bit | Detectar frío o calor fuera del rango definido |
 | **Iluminación** | Lectura de luz de la micro:bit | Detectar iluminación insuficiente |
-| **Botón A** | Interacción manual | Mostrar la temperatura actual |
-| **Botón B** | Interacción manual | Mostrar el nivel de iluminación actual |
-| **Botones A+B** | Interacción manual | Mostrar el estado general del sistema |
+| **Humedad del suelo** | Sensor analógico o potenciómetro de simulación conectado a `P0` | Detectar tierra seca o exceso de humedad |
+| **Botón A** | Interacción manual | Cambiar entre temperatura, iluminación y humedad |
+| **Botón B** | Interacción manual | Mostrar el estado general y la condición que lo provoca |
+| **Botones A+B** | Interacción manual | Mostrar consecutivamente las tres mediciones |
 
-La temperatura y la iluminación serán evaluadas continuamente, aunque el usuario no presione ningún botón.
+La temperatura, la iluminación y la humedad serán evaluadas continuamente, aunque el usuario no presione ningún botón.
 
 ---
 
@@ -130,11 +133,21 @@ Para el prototipo se utilizará la escala de iluminación entregada por la micro
 | **ADVERTENCIA** | Nivel entre 60 y 119 |
 | **CRÍTICO** | Nivel inferior a 60 |
 
-### 5.3 Interpretación general
+### 5.3 Humedad del suelo
+
+La lectura analógica se convertirá a una escala de 0 % a 100 % para facilitar su interpretación.
+
+| Estado | Condición inicial propuesta |
+|:---|:---|
+| **NORMAL** | Entre 40 % y 70 % |
+| **ADVERTENCIA** | Entre 25 % y 39 %, o entre 71 % y 85 % |
+| **CRÍTICO** | Menor a 25 % o superior a 85 % |
+
+### 5.4 Interpretación general
 
 | Estado general | Significado |
 |:---|:---|
-| **NORMAL** | La temperatura y la iluminación están dentro de los rangos aceptables |
+| **NORMAL** | La temperatura, la iluminación y la humedad están dentro de los rangos aceptables |
 | **ADVERTENCIA** | Al menos una medición está en advertencia y ninguna es crítica |
 | **CRÍTICO** | Al menos una medición se encuentra en nivel crítico |
 
@@ -156,9 +169,9 @@ La matriz LED de la micro:bit mostrará permanentemente el estado general:
 
 | Acción del usuario | Respuesta del sistema |
 |:---|:---|
-| Presionar el botón A | Mostrar la temperatura actual |
-| Presionar el botón B | Mostrar el nivel de iluminación actual |
-| Presionar A+B | Mostrar el texto del estado general |
+| Presionar el botón A | Cambiar entre la temperatura, la iluminación y la humedad actuales |
+| Presionar el botón B | Mostrar el estado general y la condición que lo provoca |
+| Presionar A+B | Mostrar consecutivamente las tres mediciones |
 
 Después de mostrar el dato solicitado, la micro:bit volverá automáticamente al indicador del estado general.
 
@@ -174,10 +187,10 @@ CRÍTICO  >  ADVERTENCIA  >  NORMAL
 
 Las reglas serán las siguientes:
 
-1. Si cualquiera de las dos mediciones está en estado `CRÍTICO`, el sistema completo será `CRÍTICO`.
+1. Si cualquiera de las tres mediciones está en estado `CRÍTICO`, el sistema completo será `CRÍTICO`.
 2. Si no existe una condición crítica, pero al menos una medición está en `ADVERTENCIA`, el sistema será `ADVERTENCIA`.
-3. El sistema solamente será `NORMAL` cuando ambas mediciones sean normales.
-4. Si temperatura e iluminación presentan simultáneamente el mismo nivel desfavorable, se mostrará primero la temperatura y luego la iluminación cuando el usuario consulte los detalles.
+3. El sistema solamente será `NORMAL` cuando las tres mediciones sean normales.
+4. Si varias condiciones presentan simultáneamente el mismo nivel desfavorable, el orden de información será: temperatura, humedad del suelo e iluminación.
 
 Esta regla evita que una condición menos grave oculte un problema crítico.
 
@@ -192,7 +205,7 @@ Esta regla evita que una condición menos grave oculte un problema crítico.
                        │
                        ▼
 ┌──────────────────────────────────────────────┐
-│ LEER TEMPERATURA Y NIVEL DE ILUMINACIÓN      │
+│ LEER TEMPERATURA, ILUMINACIÓN Y HUMEDAD       │
 └──────────────────────┬───────────────────────┘
                        │
                        ▼
@@ -222,9 +235,9 @@ Esta regla evita que una condición menos grave oculte un problema crítico.
                 ▼                   │
 ┌──────────────────────────────────┐│
 │ MOSTRAR EL DATO SOLICITADO       ││
-│ A: temperatura                   ││
-│ B: iluminación                   ││
-│ A+B: estado general              ││
+│ A: cambiar entre mediciones      ││
+│ B: estado y causa                ││
+│ A+B: mostrar las tres mediciones ││
 └────────────────┬─────────────────┘│
                  │                  │
                  └─────────┬────────┘
@@ -248,15 +261,20 @@ INICIAR sistema
 REPETIR continuamente:
     LEER temperatura
     LEER iluminación
+    LEER humedad del suelo
 
     CLASIFICAR estado de temperatura
     CLASIFICAR estado de iluminación
+    CLASIFICAR estado de humedad
 
-    SI temperatura es CRÍTICA O iluminación es CRÍTICA:
+    SI temperatura es CRÍTICA
+       O iluminación es CRÍTICA
+       O humedad es CRÍTICA:
         estado general = CRÍTICO
 
     SINO, SI temperatura está en ADVERTENCIA
-          O iluminación está en ADVERTENCIA:
+          O iluminación está en ADVERTENCIA
+          O humedad está en ADVERTENCIA:
         estado general = ADVERTENCIA
 
     SINO:
@@ -265,13 +283,13 @@ REPETIR continuamente:
     MOSTRAR símbolo correspondiente al estado general
 
     SI se presiona el botón A:
-        MOSTRAR temperatura actual
+        CAMBIAR entre temperatura, iluminación y humedad
 
     SI se presiona el botón B:
-        MOSTRAR nivel de iluminación actual
+        MOSTRAR estado general y causa
 
     SI se presionan A y B:
-        MOSTRAR estado general
+        MOSTRAR las tres mediciones consecutivamente
 
     ESPERAR un intervalo breve
 FIN REPETIR
@@ -286,6 +304,7 @@ FIN REPETIR
 | R1: utilizar micro:bit | Se definió como dispositivo del prototipo | ✅ Diseñado |
 | R2: utilizar Python | Se estableció para la futura implementación | ⏳ Fase 2 |
 | R3: temperatura e iluminación | Ambas entradas están incluidas | ✅ Diseñado |
+| Función extra: humedad del suelo | Se añadió una entrada analógica y sus umbrales | ✅ Diseñado |
 | R4: tres estados | Se definieron NORMAL, ADVERTENCIA y CRÍTICO | ✅ Diseñado |
 | R5: cambio automático | La lógica evalúa continuamente las mediciones | ✅ Diseñado |
 | R6: identificar estado | Se definieron símbolos en la matriz LED | ✅ Diseñado |
@@ -301,10 +320,10 @@ FIN REPETIR
 En la Fase 2 se deberá:
 
 1. Crear el circuito con micro:bit en Tinkercad Circuits.
-2. Confirmar cómo se simulan la temperatura y la iluminación.
+2. Confirmar cómo se simulan la temperatura, la iluminación y la humedad del suelo.
 3. Convertir este diseño lógico en un programa Python.
 4. Verificar que la matriz LED muestre correctamente los tres estados.
-5. Probar los botones A, B y A+B.
+5. Probar la consulta de las tres mediciones con los botones A, B y A+B.
 6. Corregir errores antes de completar la tabla oficial de pruebas.
 7. Registrar el prompt principal y las consultas posteriores realizadas a la IA.
 
