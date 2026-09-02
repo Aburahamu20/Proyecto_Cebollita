@@ -1,384 +1,314 @@
 <div align="center">
 
-# Informe EP1 — Proyecto IoT
+# Proyecto Cebollita — Fase 1
 
-## Sistema Automatizado de Control Ambiental, Humedad y Riego para Invernaderos
+## Invernadero inteligente con micro:bit
 
 ![Badge](https://img.shields.io/badge/Asignatura-SIY6122-0078D4?style=for-the-badge)
 ![Badge](https://img.shields.io/badge/Evaluación-EP1-28a745?style=for-the-badge)
-![Badge](https://img.shields.io/badge/Sección-002V-e63946?style=for-the-badge)
-![Badge](https://img.shields.io/badge/DUOC%20UC-Agosto%202026-1F4E79?style=for-the-badge)
-
----
+![Badge](https://img.shields.io/badge/Fase-Diseño%20conceptual-f0ad4e?style=for-the-badge)
+![Badge](https://img.shields.io/badge/Plataforma-Tinkercad-e63946?style=for-the-badge)
 
 | Campo | Detalle |
 |:---|:---|
 | **Institución** | Instituto Profesional Duoc UC |
-| **Escuela** | Informática y Telecomunicaciones |
 | **Sede** | Plaza Norte |
 | **Asignatura** | SIY6122 - Problemáticas Globales y Prototipado |
 | **Evaluación** | Experiencia Práctica 1 (EP1) |
 | **Sección** | 002V |
-| **Proyecto** | Sistema Automatizado de Control Ambiental, Humedad y Riego para Invernaderos |
+| **Experiencia** | Programando dispositivos para el IoT |
+| **Proyecto** | Invernadero inteligente — Proyecto Cebollita |
+| **Dispositivo obligatorio** | micro:bit |
+| **Lenguaje de la futura implementación** | Python |
+| **Plataforma** | Tinkercad Circuits |
 | **Integrantes** | Abraham Castro Romero · Sebastian Fuentes Cortes · Lisandra Gonzalez Hernandez · Felipe Murua Lobos · Barbara Saavedra Fernandez |
 | **Docente** | Marcos Antonio Perelli Henriquez |
-| **Plataforma** | Arduino Uno + Tinkercad |
-| **Asistentes IA** | Gemini AI · Claude · ChatGPT |
-| **Fecha** | Agosto 2026 |
+| **Fecha** | Septiembre 2026 |
 
 </div>
 
 ---
 
-## 📋 Tabla de contenidos
+## 📋 Contenido
 
-- [1. Introducción y objetivos](#1-introducción-y-objetivos)
-- [2. Funcionamiento del sistema](#2-funcionamiento-del-sistema)
-- [3. Arquitectura de hardware](#3-arquitectura-de-hardware)
-- [4. Código fuente Arduino](#4-código-fuente-arduino)
-- [5. Validación y pruebas](#5-validación-y-pruebas)
-- [6. Conclusiones y próximos pasos](#6-conclusiones-y-próximos-pasos)
-
----
-
-## 1. Introducción y objetivos
-
-> El proyecto desarrolla un prototipo IoT basado en Arduino para automatizar el control ambiental de un invernadero.
-
-El presente proyecto aborda la automatización del microclima en un invernadero mediante el desarrollo de un prototipo IoT basado en la plataforma Arduino.
-
-El objetivo principal es mantener condiciones ambientales óptimas de temperatura, humedad del suelo e iluminación, con la finalidad de maximizar el rendimiento agrícola y reducir el desperdicio de agua y energía.
-
-### 1.1 Objetivos específicos
-
-- ✔️ Monitorear continuamente la temperatura ambiental.
-- ✔️ Medir el nivel de humedad presente en el suelo.
-- ✔️ Detectar la intensidad de la iluminación ambiental.
-- ✔️ Activar la ventilación cuando la temperatura sea superior a 25 °C.
-- ✔️ Activar la calefacción cuando la temperatura sea inferior a 13 °C.
-- ✔️ Mantener la humedad del suelo entre 40 % y 70 %.
-- ✔️ Prevenir el estrés hídrico y la saturación del suelo.
-- ✔️ Controlar automáticamente la iluminación LED suplementaria.
-- ✔️ Ejecutar un ciclo continuo de lectura y control cada 5 segundos.
+- [1. Alcance de la Fase 1](#1-alcance-de-la-fase-1)
+- [2. Análisis del problema](#2-análisis-del-problema)
+- [3. Solución propuesta](#3-solución-propuesta)
+- [4. Entradas del sistema](#4-entradas-del-sistema)
+- [5. Estados y umbrales](#5-estados-y-umbrales)
+- [6. Salidas e interacción manual](#6-salidas-e-interacción-manual)
+- [7. Regla de prioridad](#7-regla-de-prioridad)
+- [8. Diseño lógico previo](#8-diseño-lógico-previo)
+- [9. Pseudocódigo conceptual](#9-pseudocódigo-conceptual)
+- [10. Revisión de requisitos](#10-revisión-de-requisitos)
+- [11. Próxima fase](#11-próxima-fase)
 
 ---
 
-## 2. Funcionamiento del sistema
+## 1. Alcance de la Fase 1
 
-La arquitectura lógica del sistema se encuentra organizada en tres etapas secuenciales de toma de decisiones y un temporizador general.
+Esta fase corresponde al análisis y diseño conceptual del primer prototipo. Su objetivo es definir cómo deberá comportarse el sistema antes de construir el circuito o escribir el programa.
 
-### 2.1 Control de temperatura
+En esta etapa:
 
-El sensor TMP36 mide continuamente la temperatura ambiental.
+- Se analiza el requerimiento del cliente.
+- Se definen las entradas y salidas.
+- Se proponen los estados `NORMAL`, `ADVERTENCIA` y `CRÍTICO`.
+- Se establecen umbrales iniciales de temperatura e iluminación.
+- Se define una interacción manual con el usuario.
+- Se establece una regla de prioridad.
+- Se elabora el diagrama y pseudocódigo previos.
 
-| Condición | Acción |
+> **Importante:** esta fase no incluye todavía el circuito final, código Python ni resultados de pruebas. Esos elementos deberán desarrollarse y comprobarse en las fases siguientes.
+
+---
+
+## 2. Análisis del problema
+
+Una persona debe supervisar constantemente las condiciones ambientales del invernadero para detectar situaciones que puedan afectar el cultivo. Este método depende de la observación humana permanente y puede provocar que un problema sea detectado demasiado tarde.
+
+El cliente necesita un primer prototipo de bajo costo que sea capaz de:
+
+1. Observar la temperatura y el nivel de iluminación.
+2. Evaluar automáticamente las condiciones ambientales.
+3. Clasificar la situación en uno de tres estados.
+4. Informar claramente el estado al encargado.
+5. Permitir que el usuario consulte manualmente las mediciones.
+6. Resolver correctamente la aparición simultánea de dos condiciones desfavorables.
+
+Durante esta primera versión se trabajará con una sola planta y con las condiciones generales de su entorno.
+
+---
+
+## 3. Solución propuesta
+
+Se propone utilizar una placa `micro:bit` dentro de Tinkercad Circuits. El dispositivo medirá la temperatura y el nivel de iluminación, analizará ambas mediciones y mostrará en su matriz LED el estado general del invernadero.
+
+La solución tendrá tres estados:
+
+- 😊 **NORMAL:** las condiciones no requieren intervención.
+- ⚠️ **ADVERTENCIA:** existe una condición que debe observarse.
+- ❌ **CRÍTICO:** existe una condición que requiere atención inmediata.
+
+Los botones de la micro:bit permitirán consultar manualmente las mediciones sin detener la supervisión automática.
+
+---
+
+## 4. Entradas del sistema
+
+| Entrada | Origen | Uso |
+|:---|:---|:---|
+| **Temperatura** | Sensor de temperatura disponible en la micro:bit | Detectar frío o calor fuera del rango definido |
+| **Iluminación** | Lectura de luz de la micro:bit | Detectar iluminación insuficiente |
+| **Botón A** | Interacción manual | Mostrar la temperatura actual |
+| **Botón B** | Interacción manual | Mostrar el nivel de iluminación actual |
+| **Botones A+B** | Interacción manual | Mostrar el estado general del sistema |
+
+La temperatura y la iluminación serán evaluadas continuamente, aunque el usuario no presione ningún botón.
+
+---
+
+## 5. Estados y umbrales
+
+Los siguientes valores son umbrales iniciales para la simulación. El equipo deberá revisarlos y justificar su elección antes de considerarlos definitivos.
+
+### 5.1 Temperatura
+
+| Estado | Condición inicial propuesta |
 |:---|:---|
-| Temperatura superior a 25 °C | Encender ventilador y apagar calefactor |
-| Temperatura inferior a 13 °C | Encender calefactor y apagar ventilador |
-| Temperatura entre 13 °C y 25 °C | Apagar ventilador y calefactor |
+| **NORMAL** | Entre 18 °C y 25 °C |
+| **ADVERTENCIA** | Entre 14 °C y 17 °C, o entre 26 °C y 29 °C |
+| **CRÍTICO** | Menor a 14 °C o igual/superior a 30 °C |
 
-### 2.2 Control de humedad del suelo
+### 5.2 Iluminación
 
-El sensor de humedad determina el porcentaje de agua presente en el suelo.
+Para el prototipo se utilizará la escala de iluminación entregada por la micro:bit.
 
-| Condición | Acción |
+| Estado | Condición inicial propuesta |
 |:---|:---|
-| Humedad inferior al 40 % | Encender bomba de riego |
-| Humedad superior al 70 % | Apagar riego y encender ventilador |
-| Humedad entre 40 % y 70 % | Mantener apagada la bomba de riego |
+| **NORMAL** | Nivel igual o superior a 120 |
+| **ADVERTENCIA** | Nivel entre 60 y 119 |
+| **CRÍTICO** | Nivel inferior a 60 |
 
-### 2.3 Control de iluminación
+### 5.3 Interpretación general
 
-La fotoresistencia LDR mide la cantidad de luz ambiental.
-
-| Condición | Acción |
+| Estado general | Significado |
 |:---|:---|
-| Nivel de luz inferior a 400 | Encender iluminación LED |
-| Nivel de luz igual o superior a 400 | Apagar iluminación LED |
+| **NORMAL** | La temperatura y la iluminación están dentro de los rangos aceptables |
+| **ADVERTENCIA** | Al menos una medición está en advertencia y ninguna es crítica |
+| **CRÍTICO** | Al menos una medición se encuentra en nivel crítico |
 
-### 2.4 Temporización
+---
 
-Una vez completadas las lecturas y acciones, el sistema espera 5 segundos antes de comenzar nuevamente el ciclo.
+## 6. Salidas e interacción manual
 
-### 2.5 Diagrama de flujo del sistema
+### 6.1 Información automática
 
-> El siguiente diagrama representa el ciclo completo de lectura y control del invernadero. Fue recreado mediante caracteres de texto, por lo que no corresponde a una imagen y puede editarse directamente desde el repositorio.
+La matriz LED de la micro:bit mostrará permanentemente el estado general:
+
+| Estado | Representación propuesta |
+|:---|:---|
+| **NORMAL** | Cara feliz o símbolo de aprobación |
+| **ADVERTENCIA** | Signo de exclamación |
+| **CRÍTICO** | Una X intermitente |
+
+### 6.2 Interacción manual
+
+| Acción del usuario | Respuesta del sistema |
+|:---|:---|
+| Presionar el botón A | Mostrar la temperatura actual |
+| Presionar el botón B | Mostrar el nivel de iluminación actual |
+| Presionar A+B | Mostrar el texto del estado general |
+
+Después de mostrar el dato solicitado, la micro:bit volverá automáticamente al indicador del estado general.
+
+---
+
+## 7. Regla de prioridad
+
+La prioridad general será:
 
 ```text
-┌──────────────────────────────────────────┐
-│            LEER TEMPERATURA              │
-└────────────────────┬─────────────────────┘
-                     │
-                     ▼
-┌──────────────────────────────────────────┐
-│      ¿TEMPERATURA MAYOR A 25 °C?         │
-└──────────┬───────────────────┬───────────┘
-           │ SÍ                │ NO
-           ▼                   ▼
-┌────────────────────┐   ┌──────────────────────────────────────┐
-│ Encender ventilador│   │   ¿TEMPERATURA MENOR A 13 °C?       │
-└──────────┬─────────┘   └──────────┬───────────────┬───────────┘
-           │                        │ SÍ            │ NO
-           │                        ▼               ▼
-           │             ┌───────────────────┐ ┌───────────────────────┐
-           │             │ Encender luz      │ │ Apagar ventilador y   │
-           │             │ térmica/calefactor│ │ calefactor            │
-           │             └─────────┬─────────┘ └──────────┬────────────┘
-           │                       │                      │
-           └───────────────────────┴──────────────────────┘
-                                   │
-                                   ▼
-                    ┌────────────────────────────┐
-                    │ LEER HUMEDAD DEL SUELO     │
-                    └──────────────┬─────────────┘
-                                   │
-                                   ▼
-                    ┌────────────────────────────┐
-                    │ ¿HUMEDAD MENOR AL 40 %?    │
-                    └────────┬───────────┬───────┘
-                             │ SÍ        │ NO
-                             ▼           ▼
-              ┌─────────────────────┐  ┌───────────────────────────┐
-              │ Encender bomba de   │  │ ¿HUMEDAD MAYOR AL 70 %?  │
-              │ agua/sistema de     │  └────────┬──────────┬───────┘
-              │ riego               │           │ SÍ       │ NO
-              └──────────┬──────────┘           ▼          ▼
-                         │         ┌────────────────────┐ ┌──────────────┐
-                         │         │ Apagar riego y     │ │ Apagar riego│
-                         │         │ encender ventilador│ └──────┬───────┘
-                         │         └──────────┬─────────┘        │
-                         └────────────────────┴──────────────────┘
-                                              │
-                                              ▼
-                              ┌──────────────────────────┐
-                              │     CONTROL DE LUZ       │
-                              └────────────┬─────────────┘
-                                           │
-                                           ▼
-                              ┌──────────────────────────┐
-                              │ ¿EL NIVEL DE LUZ ES BAJO?│
-                              └────────┬──────────┬───────┘
-                                       │ SÍ       │ NO
-                                       ▼          ▼
-                            ┌────────────────┐ ┌────────────────┐
-                            │ Encender LEDS  │ │ Apagar LEDS    │
-                            └───────┬────────┘ └───────┬────────┘
-                                    │                  │
-                                    └────────┬─────────┘
-                                             │
-                                             ▼
-                              ┌──────────────────────────┐
-                              │   ESPERAR 5 SEGUNDOS     │
-                              └────────────┬─────────────┘
-                                           │
-                                           └──────────────► VOLVER A
-                                                            LEER
-                                                        TEMPERATURA
+CRÍTICO  >  ADVERTENCIA  >  NORMAL
 ```
 
-El sistema repite automáticamente este proceso cada 5 segundos, comenzando nuevamente con la lectura de la temperatura ambiental.
+Las reglas serán las siguientes:
+
+1. Si cualquiera de las dos mediciones está en estado `CRÍTICO`, el sistema completo será `CRÍTICO`.
+2. Si no existe una condición crítica, pero al menos una medición está en `ADVERTENCIA`, el sistema será `ADVERTENCIA`.
+3. El sistema solamente será `NORMAL` cuando ambas mediciones sean normales.
+4. Si temperatura e iluminación presentan simultáneamente el mismo nivel desfavorable, se mostrará primero la temperatura y luego la iluminación cuando el usuario consulte los detalles.
+
+Esta regla evita que una condición menos grave oculte un problema crítico.
 
 ---
 
-## 3. Arquitectura de hardware
-
-### 3.1 Componentes utilizados
-
-| Componente o actuador | Conexión Arduino | Tipo de entrada/salida | Función |
-|:---|:---:|:---:|:---|
-| Sensor de temperatura TMP36 | `A0` | Entrada analógica | Medición de la temperatura ambiental |
-| Sensor de humedad del suelo | `A1` | Entrada analógica | Medición del porcentaje de humedad |
-| Sensor de luz LDR | `A2` | Entrada analógica | Detección del nivel de iluminación |
-| Ventilador o motor DC | `3` | Salida digital PWM | Refrigeración y evacuación de humedad |
-| Calefactor o luz térmica | `4` | Salida digital | Calefacción del ambiente |
-| Bomba de agua | `5` | Salida digital | Activación del sistema de riego |
-| Iluminación LED | `6` | Salida digital | Iluminación ambiental suplementaria |
-
-### 3.2 Distribución de pines
+## 8. Diseño lógico previo
 
 ```text
-Arduino Uno
-│
-├── A0 ── Sensor de temperatura TMP36
-├── A1 ── Sensor de humedad del suelo
-├── A2 ── Fotoresistencia LDR
-├── D3 ── Ventilador
-├── D4 ── Calefactor
-├── D5 ── Bomba de riego
-└── D6 ── Iluminación LED
+┌──────────────────────────────────────────────┐
+│            INICIAR EL SISTEMA                │
+└──────────────────────┬───────────────────────┘
+                       │
+                       ▼
+┌──────────────────────────────────────────────┐
+│ LEER TEMPERATURA Y NIVEL DE ILUMINACIÓN      │
+└──────────────────────┬───────────────────────┘
+                       │
+                       ▼
+┌──────────────────────────────────────────────┐
+│ ¿ALGUNA CONDICIÓN ESTÁ EN NIVEL CRÍTICO?     │
+└───────────────┬───────────────────┬──────────┘
+                │ SÍ                │ NO
+                ▼                   ▼
+┌──────────────────────────┐  ┌─────────────────────────────────────┐
+│ ESTADO GENERAL: CRÍTICO  │  │ ¿ALGUNA CONDICIÓN ESTÁ EN          │
+│ Mostrar X intermitente   │  │ NIVEL DE ADVERTENCIA?              │
+└─────────────┬────────────┘  └────────────┬──────────────┬─────────┘
+              │                           │ SÍ           │ NO
+              │                           ▼              ▼
+              │             ┌────────────────────────┐ ┌──────────────────────┐
+              │             │ ESTADO: ADVERTENCIA    │ │ ESTADO: NORMAL       │
+              │             │ Mostrar exclamación    │ │ Mostrar cara feliz   │
+              │             └────────────┬───────────┘ └──────────┬───────────┘
+              │                          │                        │
+              └──────────────────────────┴────────────────────────┘
+                                         │
+                                         ▼
+┌──────────────────────────────────────────────┐
+│ ¿EL USUARIO PRESIONÓ UN BOTÓN?               │
+└───────────────┬───────────────────┬──────────┘
+                │ SÍ                │ NO
+                ▼                   │
+┌──────────────────────────────────┐│
+│ MOSTRAR EL DATO SOLICITADO       ││
+│ A: temperatura                   ││
+│ B: iluminación                   ││
+│ A+B: estado general              ││
+└────────────────┬─────────────────┘│
+                 │                  │
+                 └─────────┬────────┘
+                           │
+                           ▼
+┌──────────────────────────────────────────────┐
+│ ESPERAR UN INTERVALO BREVE Y REPETIR         │
+└──────────────────────┬───────────────────────┘
+                       │
+                       └──────────────► VOLVER A LEER
+                                        LAS CONDICIONES
 ```
 
 ---
 
-## 4. Código fuente Arduino
-
-> El siguiente programa escrito en C++ implementa la lógica de control ambiental para su simulación en Tinkercad y ejecución en Arduino Uno.
-
-```cpp
-/*
- * PROYECTO IoT: CONTROL DE INVERNADERO AUTOMATIZADO
- * Asignatura: SIY6122 - Problemáticas Globales y Prototipado
- * Evaluación: EP1
- * Sección: 002V
- * Duoc UC - Sede Plaza Norte
- */
-
-// Definición de pines de entrada (sensores)
-const int PIN_TEMP = A0;       // Sensor TMP36
-const int PIN_HUMEDAD = A1;    // Sensor de humedad del suelo
-const int PIN_LDR = A2;        // Fotoresistencia
-
-// Definición de pines de salida (actuadores)
-const int PIN_VENTILADOR = 3;   // Ventilador
-const int PIN_CALEFACTOR = 4;   // Calefactor o luz térmica
-const int PIN_BOMBA_RIEGO = 5;  // Bomba de agua
-const int PIN_LEDS_LUZ = 6;     // Iluminación LED
-
-void setup() {
-  pinMode(PIN_VENTILADOR, OUTPUT);
-  pinMode(PIN_CALEFACTOR, OUTPUT);
-  pinMode(PIN_BOMBA_RIEGO, OUTPUT);
-  pinMode(PIN_LEDS_LUZ, OUTPUT);
-
-  Serial.begin(9600);
-}
-
-void loop() {
-  // ---------------------------------------------------------
-  // 1. LECTURA Y CONTROL DE TEMPERATURA
-  // ---------------------------------------------------------
-
-  int lectTemp = analogRead(PIN_TEMP);
-
-  // Conversión TMP36: (Vout - 0.5 V) * 100
-  float tempC = ((lectTemp * (5.0 / 1023.0)) - 0.5) * 100.0;
-
-  if (tempC > 25.0) {
-    digitalWrite(PIN_VENTILADOR, HIGH);
-    digitalWrite(PIN_CALEFACTOR, LOW);
-  }
-  else if (tempC < 13.0) {
-    digitalWrite(PIN_CALEFACTOR, HIGH);
-    digitalWrite(PIN_VENTILADOR, LOW);
-  }
-  else {
-    // Rango normal: entre 13 °C y 25 °C
-    digitalWrite(PIN_VENTILADOR, LOW);
-    digitalWrite(PIN_CALEFACTOR, LOW);
-  }
-
-  // ---------------------------------------------------------
-  // 2. LECTURA Y CONTROL DE HUMEDAD DEL SUELO
-  // ---------------------------------------------------------
-
-  int lecturaHumedad = analogRead(PIN_HUMEDAD);
-  int humedadPct = map(lecturaHumedad, 0, 1023, 0, 100);
-
-  if (humedadPct < 40) {
-    digitalWrite(PIN_BOMBA_RIEGO, HIGH);
-  }
-  else if (humedadPct > 70) {
-    digitalWrite(PIN_BOMBA_RIEGO, LOW);
-    digitalWrite(PIN_VENTILADOR, HIGH);
-  }
-  else {
-    // Rango normal: entre 40 % y 70 %
-    digitalWrite(PIN_BOMBA_RIEGO, LOW);
-  }
-
-  // ---------------------------------------------------------
-  // 3. LECTURA Y CONTROL DE ILUMINACIÓN
-  // ---------------------------------------------------------
-
-  int nivelLuz = analogRead(PIN_LDR);
-  int umbralLuzBaja = 400;
-
-  if (nivelLuz < umbralLuzBaja) {
-    digitalWrite(PIN_LEDS_LUZ, HIGH);
-  }
-  else {
-    digitalWrite(PIN_LEDS_LUZ, LOW);
-  }
-
-  // ---------------------------------------------------------
-  // 4. TEMPORIZADOR DEL CICLO
-  // ---------------------------------------------------------
-
-  delay(5000);
-}
-```
-
-### 4.1 Resumen de variables
-
-| Variable | Tipo | Función |
-|:---|:---:|:---|
-| `lectTemp` | `int` | Almacena la lectura analógica del sensor TMP36 |
-| `tempC` | `float` | Guarda la temperatura convertida a grados Celsius |
-| `lecturaHumedad` | `int` | Almacena la lectura del sensor de humedad |
-| `humedadPct` | `int` | Guarda la humedad convertida a porcentaje |
-| `nivelLuz` | `int` | Almacena la lectura de la fotoresistencia |
-| `umbralLuzBaja` | `int` | Define el nivel mínimo de iluminación aceptable |
-
----
-
-## 5. Validación y pruebas
-
-> Se realizaron seis casos de prueba para comprobar el funcionamiento de los sensores y actuadores.
-
-| Caso | Valores de entrada | Resultado esperado | Estado |
-|:---|:---|:---|:---:|
-| Temperatura alta | Temp = 28 °C, Hum = 50 %, Luz = 600 | Ventilador ON, calefactor OFF, riego OFF y LED OFF | ✅ PASÓ |
-| Temperatura baja | Temp = 10 °C, Hum = 50 %, Luz = 600 | Calefactor ON, ventilador OFF, riego OFF y LED OFF | ✅ PASÓ |
-| Humedad baja | Temp = 20 °C, Hum = 30 %, Luz = 600 | Bomba de riego ON, ventilador OFF y calefactor OFF | ✅ PASÓ |
-| Humedad alta | Temp = 20 °C, Hum = 85 %, Luz = 600 | Bomba de riego OFF y ventilador ON | ✅ PASÓ |
-| Oscuridad | Temp = 20 °C, Hum = 50 %, Luz = 200 | LED ON y los demás actuadores OFF | ✅ PASÓ |
-| Estado normal | Temp = 20 °C, Hum = 55 %, Luz = 700 | Todos los actuadores OFF | ✅ PASÓ |
-
-### 5.1 Resumen de resultados
+## 9. Pseudocódigo conceptual
 
 ```text
-Pruebas ejecutadas: 6
-Pruebas aprobadas:  6
-Pruebas fallidas:   0
-Resultado general:  SISTEMA VALIDADO
+INICIAR sistema
+
+REPETIR continuamente:
+    LEER temperatura
+    LEER iluminación
+
+    CLASIFICAR estado de temperatura
+    CLASIFICAR estado de iluminación
+
+    SI temperatura es CRÍTICA O iluminación es CRÍTICA:
+        estado general = CRÍTICO
+
+    SINO, SI temperatura está en ADVERTENCIA
+          O iluminación está en ADVERTENCIA:
+        estado general = ADVERTENCIA
+
+    SINO:
+        estado general = NORMAL
+
+    MOSTRAR símbolo correspondiente al estado general
+
+    SI se presiona el botón A:
+        MOSTRAR temperatura actual
+
+    SI se presiona el botón B:
+        MOSTRAR nivel de iluminación actual
+
+    SI se presionan A y B:
+        MOSTRAR estado general
+
+    ESPERAR un intervalo breve
+FIN REPETIR
 ```
 
 ---
 
-## 6. Conclusiones y próximos pasos
+## 10. Revisión de requisitos
 
-La implementación del sistema automatizado de control ambiental para invernaderos fue completada exitosamente.
+| Requisito | Cómo se considera en la Fase 1 | Estado |
+|:---|:---|:---:|
+| R1: utilizar micro:bit | Se definió como dispositivo del prototipo | ✅ Diseñado |
+| R2: utilizar Python | Se estableció para la futura implementación | ⏳ Fase 2 |
+| R3: temperatura e iluminación | Ambas entradas están incluidas | ✅ Diseñado |
+| R4: tres estados | Se definieron NORMAL, ADVERTENCIA y CRÍTICO | ✅ Diseñado |
+| R5: cambio automático | La lógica evalúa continuamente las mediciones | ✅ Diseñado |
+| R6: identificar estado | Se definieron símbolos en la matriz LED | ✅ Diseñado |
+| R7: interacción manual | Se asignaron funciones a los botones A, B y A+B | ✅ Diseñado |
+| R8: regla de prioridad | Se definió CRÍTICO > ADVERTENCIA > NORMAL | ✅ Diseñado |
+| R9: simulación en Tinkercad | Todavía no ejecutada | ⏳ Fase 2 |
+| R10: realizar pruebas | Todavía no ejecutadas | ⏳ Fase posterior |
 
-Se logró:
+---
 
-- ✔️ Medir la temperatura ambiental mediante un sensor TMP36.
-- ✔️ Automatizar la ventilación cuando la temperatura supera los 25 °C.
-- ✔️ Automatizar la calefacción cuando la temperatura baja de 13 °C.
-- ✔️ Controlar el riego según el porcentaje de humedad del suelo.
-- ✔️ Activar la iluminación LED cuando existe poca luz ambiental.
-- ✔️ Ejecutar continuamente el sistema con intervalos de 5 segundos.
-- ✔️ Validar el funcionamiento mediante seis casos de prueba.
+## 11. Próxima fase
 
-### 6.1 Eficiencia de control
+En la Fase 2 se deberá:
 
-El uso de una temporización de 5 segundos evita sobrecargas de procesamiento y fluctuaciones bruscas en las lecturas de los sensores.
+1. Crear el circuito con micro:bit en Tinkercad Circuits.
+2. Confirmar cómo se simulan la temperatura y la iluminación.
+3. Convertir este diseño lógico en un programa Python.
+4. Verificar que la matriz LED muestre correctamente los tres estados.
+5. Probar los botones A, B y A+B.
+6. Corregir errores antes de completar la tabla oficial de pruebas.
+7. Registrar el prompt principal y las consultas posteriores realizadas a la IA.
 
-### 6.2 Automatización integral
-
-La integración simultánea de ventilación, calefacción, iluminación y riego automatizado reduce considerablemente la necesidad de intervención humana.
-
-### 6.3 Proyección IoT futura
-
-Como siguiente fase del proyecto, se propone incorporar un módulo de comunicación inalámbrica como un `ESP8266` o `ESP32`.
-
-Este módulo permitiría:
-
-- Enviar la telemetría del invernadero a una base de datos en la nube.
-- Consultar la temperatura y humedad de manera remota.
-- Visualizar métricas en tiempo real.
-- Crear un dashboard interactivo.
-- Generar alertas cuando se detecten condiciones críticas.
-- Mantener un historial de las mediciones ambientales.
+> Los umbrales y el comportamiento propuestos en esta fase deben ser revisados por todo el equipo antes de comenzar la programación.
 
 ---
 
@@ -386,6 +316,6 @@ Este módulo permitiría:
 
 **DUOC UC — Sede Plaza Norte**
 
-**Problemáticas Globales y Prototipado — EP1 — Agosto 2026**
+**SIY6122 · Problemáticas Globales y Prototipado · EP1 · Fase 1**
 
 </div>
