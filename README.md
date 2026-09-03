@@ -82,7 +82,7 @@ Durante esta primera versión se trabajará con una sola planta y con las condic
 
 ## 3. Solución propuesta
 
-Se propone utilizar una placa `micro:bit` dentro de Tinkercad Circuits. El dispositivo medirá la temperatura, el nivel de iluminación y la humedad del suelo, analizará las tres mediciones y mostrará en su matriz LED el estado general del invernadero.
+Se propone utilizar una placa `micro:bit` dentro de Tinkercad Circuits. El dispositivo medirá la temperatura, el nivel de iluminación y la humedad del suelo, analizará las tres mediciones y mostrará en su matriz LED el estado general del invernadero, la causa detectada y el valor medido.
 
 La humedad se incorporará como una función adicional mediante una entrada analógica. Si Tinkercad no dispone del sensor específico, durante la simulación se podrá representar su lectura con un potenciómetro conectado al pin `P0`, utilizando una escala normalizada de 0 % a 100 %.
 
@@ -92,7 +92,13 @@ La solución tendrá tres estados:
 - ⚠️ **ADVERTENCIA:** existe una condición que debe observarse.
 - ❌ **CRÍTICO:** existe una condición que requiere atención inmediata.
 
-Los botones de la micro:bit permitirán consultar manualmente las mediciones sin detener la supervisión automática.
+La matriz LED mostrará mensajes como `ADVERTENCIA - SUELO SECO - HUMEDAD 30 %` o `CRÍTICO - POCA LUZ - NIVEL 45`. Cuando no exista un problema, mostrará `NORMAL` y el símbolo correspondiente.
+
+Los dos botones incorporados en la micro:bit tendrán funciones de seguridad:
+
+- El botón `A` reiniciará la lógica del sistema y comenzará nuevamente el ciclo de supervisión.
+- El botón `B` intentará resolver la advertencia activa mediante una acción correctiva, pero solo después de comprobar nuevamente que la acción sea necesaria y segura.
+- La combinación `A+B` mostrará consecutivamente las mediciones actuales para fines de consulta.
 
 ---
 
@@ -103,9 +109,9 @@ Los botones de la micro:bit permitirán consultar manualmente las mediciones sin
 | **Temperatura** | Sensor de temperatura disponible en la micro:bit | Detectar frío o calor fuera del rango definido |
 | **Iluminación** | Lectura de luz de la micro:bit | Detectar iluminación insuficiente |
 | **Humedad del suelo** | Sensor analógico o potenciómetro de simulación conectado a `P0` | Detectar tierra seca o exceso de humedad |
-| **Botón A** | Interacción manual | Cambiar entre temperatura, iluminación y humedad |
-| **Botón B** | Interacción manual | Mostrar el estado general y la condición que lo provoca |
-| **Botones A+B** | Interacción manual | Mostrar consecutivamente las tres mediciones |
+| **Botón A** | Interacción manual | Reiniciar la lógica, apagar las salidas y comenzar un nuevo ciclo |
+| **Botón B** | Interacción manual | Ejecutar la acción correctiva permitida para la advertencia activa |
+| **Botones A+B** | Interacción manual | Mostrar consecutivamente temperatura, iluminación y humedad |
 
 La temperatura, la iluminación y la humedad serán evaluadas continuamente, aunque el usuario no presione ningún botón.
 
@@ -155,9 +161,9 @@ La lectura analógica se convertirá a una escala de 0 % a 100 % para facilitar 
 
 ## 6. Salidas e interacción manual
 
-### 6.1 Información automática
+### 6.1 Pantalla LED e información automática
 
-La matriz LED de la micro:bit mostrará permanentemente el estado general:
+La matriz LED 5×5 de la micro:bit mostrará el estado general mediante símbolos y texto desplazable:
 
 | Estado | Representación propuesta |
 |:---|:---|
@@ -165,15 +171,59 @@ La matriz LED de la micro:bit mostrará permanentemente el estado general:
 | **ADVERTENCIA** | Signo de exclamación |
 | **CRÍTICO** | Una X intermitente |
 
+Cuando se detecte un cambio de estado, la pantalla mostrará en este orden:
+
+```text
+ESTADO → CAUSA → VALOR ACTUAL
+```
+
+Ejemplos:
+
+```text
+ADVERTENCIA → SUELO SECO → HUMEDAD 30 %
+CRÍTICO → MUCHA LUZ → NIVEL 230
+ADVERTENCIA → TEMPERATURA ALTA → 27 °C
+```
+
+Después del mensaje, quedará visible el símbolo del estado. El texto volverá a mostrarse si cambia la condición o si el usuario presiona `A+B`.
+
 ### 6.2 Interacción manual
 
 | Acción del usuario | Respuesta del sistema |
 |:---|:---|
-| Presionar el botón A | Cambiar entre la temperatura, la iluminación y la humedad actuales |
-| Presionar el botón B | Mostrar el estado general y la condición que lo provoca |
-| Presionar A+B | Mostrar consecutivamente las tres mediciones |
+| Presionar el botón A | Reiniciar el sistema lógico, apagar temporalmente las salidas y volver a leer todos los sensores |
+| Presionar el botón B | Revalidar el problema y ejecutar únicamente la acción correctiva segura asociada |
+| Presionar A+B | Mostrar consecutivamente temperatura, iluminación, humedad, estado y causa |
 
-Después de mostrar el dato solicitado, la micro:bit volverá automáticamente al indicador del estado general.
+El reinicio no modificará las condiciones físicas ni ocultará una falla. Si el problema continúa después de reiniciar, el sistema volverá a detectarlo y mostrará nuevamente la advertencia.
+
+### 6.3 Acciones correctivas contextuales
+
+Antes de activar cualquier salida, el sistema volverá a leer el sensor correspondiente. El botón `B` no funcionará como un control manual forzado, sino como una autorización para resolver una condición detectada.
+
+| Condición detectada | Acción permitida al presionar B | Protección |
+|:---|:---|:---|
+| **Suelo seco** | Activar el riego durante un tiempo limitado | Bloquear si la humedad ya está normal o alta |
+| **Suelo demasiado mojado** | Mantener el riego apagado y activar ventilación si está disponible | Nunca agregar más agua |
+| **Poca luz** | Encender la iluminación LED suplementaria | Bloquear si la iluminación ya es suficiente |
+| **Mucha luz** | Apagar la iluminación suplementaria y solicitar intervención | Nunca encender más iluminación |
+| **Temperatura alta** | Activar ventilación si está disponible | Bloquear calefacción |
+| **Temperatura baja** | Activar calefacción si está disponible | Bloquear ventilación de enfriamiento |
+| **Condiciones normales** | No ejecutar ninguna acción | Mostrar `NIVEL CORRECTO - ACCIÓN BLOQUEADA` |
+
+Después de cada acción, el sistema volverá a medir. El riego deberá tener un tiempo máximo para impedir que una falla del sensor mantenga la salida encendida indefinidamente.
+
+### 6.4 Salidas previstas para la simulación
+
+| Salida | Función |
+|:---|:---|
+| **Matriz LED 5×5 de la micro:bit** | Mostrar estado, causa, valor y confirmación o bloqueo de acciones |
+| **Sistema de riego simulado** | Representar la entrega de agua cuando el suelo esté seco |
+| **LED de iluminación suplementaria** | Aumentar la iluminación cuando el nivel sea insuficiente |
+| **Ventilación simulada** | Responder ante temperatura alta o exceso de humedad, si el equipo decide incorporarla |
+| **Calefacción simulada** | Responder ante temperatura baja, si el equipo decide incorporarla |
+
+En Tinkercad, los actuadores que no estén disponibles pueden representarse mediante LED o motores, siempre que el equipo explique claramente qué función representa cada uno.
 
 ---
 
@@ -190,7 +240,8 @@ Las reglas serán las siguientes:
 1. Si cualquiera de las tres mediciones está en estado `CRÍTICO`, el sistema completo será `CRÍTICO`.
 2. Si no existe una condición crítica, pero al menos una medición está en `ADVERTENCIA`, el sistema será `ADVERTENCIA`.
 3. El sistema solamente será `NORMAL` cuando las tres mediciones sean normales.
-4. Si varias condiciones presentan simultáneamente el mismo nivel desfavorable, el orden de información será: temperatura, humedad del suelo e iluminación.
+4. Si varias condiciones presentan simultáneamente el mismo nivel desfavorable, el orden de atención será: temperatura, humedad del suelo e iluminación.
+5. Una pulsación del botón de acción resolverá una sola condición a la vez. Después de actuar, el sistema volverá a medir y atenderá el siguiente problema si todavía existe.
 
 Esta regla evita que una condición menos grave oculte un problema crítico.
 
@@ -229,20 +280,36 @@ Esta regla evita que una condición menos grave oculte un problema crítico.
                                          │
                                          ▼
 ┌──────────────────────────────────────────────┐
-│ ¿EL USUARIO PRESIONÓ UN BOTÓN?               │
+│ MOSTRAR ESTADO, CAUSA Y VALOR EN PANTALLA LED │
+└───────────────┬───────────────────┬──────────┘
+                │
+                ▼
+┌──────────────────────────────────────────────┐
+│ ¿BOTÓN A DE REINICIO PRESIONADO?             │
 └───────────────┬───────────────────┬──────────┘
                 │ SÍ                │ NO
-                ▼                   │
-┌──────────────────────────────────┐│
-│ MOSTRAR EL DATO SOLICITADO       ││
-│ A: cambiar entre mediciones      ││
-│ B: estado y causa                ││
-│ A+B: mostrar las tres mediciones ││
-└────────────────┬─────────────────┘│
-                 │                  │
-                 └─────────┬────────┘
-                           │
-                           ▼
+                ▼                   ▼
+┌────────────────────────────┐  ┌─────────────────────────────────┐
+│ APAGAR SALIDAS, REINICIAR  │  │ ¿BOTÓN B DE ACCIÓN PRESIONADO? │
+│ VARIABLES Y VOLVER A LEER  │  └────────────┬───────────┬────────┘
+└────────────────────────────┘               │ SÍ        │ NO
+                                             ▼           │
+                              ┌──────────────────────────┐│
+                              │ REVALIDAR LA CONDICIÓN  ││
+                              └────────────┬─────────────┘│
+                                           ▼              │
+                              ┌──────────────────────────┐│
+                              │ ¿LA ACCIÓN ES NECESARIA ││
+                              │ Y SEGURA?                ││
+                              └───────┬─────────┬────────┘│
+                                      │ SÍ      │ NO      │
+                                      ▼         ▼         │
+                         ┌─────────────────┐ ┌───────────┐ │
+                         │ ACTIVAR SALIDA  │ │ BLOQUEAR  │ │
+                         │ CORRESPONDIENTE │ │ Y AVISAR  │ │
+                         └────────┬────────┘ └─────┬─────┘ │
+                                  └─────────┬──────┴───────┘
+                                            ▼
 ┌──────────────────────────────────────────────┐
 │ ESPERAR UN INTERVALO BREVE Y REPETIR         │
 └──────────────────────┬───────────────────────┘
@@ -281,15 +348,26 @@ REPETIR continuamente:
         estado general = NORMAL
 
     MOSTRAR símbolo correspondiente al estado general
+    MOSTRAR causa y valor cuando cambie el estado
 
     SI se presiona el botón A:
-        CAMBIAR entre temperatura, iluminación y humedad
+        APAGAR todas las salidas
+        REINICIAR variables de control
+        VOLVER al inicio del ciclo
 
     SI se presiona el botón B:
-        MOSTRAR estado general y causa
+        VOLVER a leer el sensor relacionado con la advertencia
+
+        SI la acción sigue siendo necesaria y es segura:
+            EJECUTAR la acción correctiva correspondiente
+            LIMITAR el tiempo de activación
+            VOLVER a medir
+        SINO:
+            BLOQUEAR la acción
+            MOSTRAR "NIVEL CORRECTO - ACCIÓN BLOQUEADA"
 
     SI se presionan A y B:
-        MOSTRAR las tres mediciones consecutivamente
+        MOSTRAR mediciones, estado y causa
 
     ESPERAR un intervalo breve
 FIN REPETIR
@@ -307,9 +385,10 @@ FIN REPETIR
 | Función extra: humedad del suelo | Se añadió una entrada analógica y sus umbrales | ✅ Diseñado |
 | R4: tres estados | Se definieron NORMAL, ADVERTENCIA y CRÍTICO | ✅ Diseñado |
 | R5: cambio automático | La lógica evalúa continuamente las mediciones | ✅ Diseñado |
-| R6: identificar estado | Se definieron símbolos en la matriz LED | ✅ Diseñado |
-| R7: interacción manual | Se asignaron funciones a los botones A, B y A+B | ✅ Diseñado |
+| R6: identificar estado | La matriz LED mostrará estado, causa y valor actual | ✅ Diseñado |
+| R7: interacción manual | A reinicia, B autoriza una acción segura y A+B consulta los datos | ✅ Diseñado |
 | R8: regla de prioridad | Se definió CRÍTICO > ADVERTENCIA > NORMAL | ✅ Diseñado |
+| Protección adicional | Las acciones innecesarias o peligrosas serán bloqueadas | ✅ Diseñado |
 | R9: simulación en Tinkercad | Todavía no ejecutada | ⏳ Fase 2 |
 | R10: realizar pruebas | Todavía no ejecutadas | ⏳ Fase posterior |
 
@@ -322,10 +401,11 @@ En la Fase 2 se deberá:
 1. Crear el circuito con micro:bit en Tinkercad Circuits.
 2. Confirmar cómo se simulan la temperatura, la iluminación y la humedad del suelo.
 3. Convertir este diseño lógico en un programa Python.
-4. Verificar que la matriz LED muestre correctamente los tres estados.
-5. Probar la consulta de las tres mediciones con los botones A, B y A+B.
-6. Corregir errores antes de completar la tabla oficial de pruebas.
-7. Registrar el prompt principal y las consultas posteriores realizadas a la IA.
+4. Verificar que la matriz LED muestre estado, causa y valor medido.
+5. Probar el reinicio con A, la acción contextual con B y la consulta con A+B.
+6. Comprobar que el sistema bloquee el riego, la luz u otra salida cuando el nivel correspondiente sea normal.
+7. Corregir errores antes de completar la tabla oficial de pruebas.
+8. Registrar el prompt principal y las consultas posteriores realizadas a la IA.
 
 > Los umbrales y el comportamiento propuestos en esta fase deben ser revisados por todo el equipo antes de comenzar la programación.
 
